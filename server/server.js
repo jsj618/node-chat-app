@@ -1,64 +1,39 @@
-const path=require('path');
-const http=require('http');
-const express=require('express');
-const socketIO=require('socket.io');
+const path = require('path');
+const http = require('http');
+const express = require('express');
+const socketIO = require('socket.io');
 
-
-const publicPath=path.join(__dirname,'/../public');
-
-
-const port=process.env.PORT || 3000;
-
-var app=express();
-var server=http.createServer(app);
-var io=socketIO(server);
-
+const { generateMessage } = require('./utils/message');
+const publicPath = path.join(__dirname, '../public');
+const port = process.env.PORT || 3000;
+var app = express();
+var server = http.createServer(app);
+var io = socketIO(server);
 
 app.use(express.static(publicPath));
 
-io.on('connection',(socket)=>{
-    console.log('from server: new user connected..');
+io.on('connection', (socket) => {
+    console.log('New user connected');
 
-   /*  socket.emit('newMessage', {
-        from: 'bill',
-        text: 'hey',
-        createAt: 123
-    }); */ 
+    socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
 
-    //welcome message from admin to new user
-    socket.emit('newMessage',{
-        from: 'Admin',
-        text: 'Welcome to chat',
-        createdAt: new Date().getTime()
-    });
+    socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined'));
 
-    //broadcast to all users that someone new has joined
-    socket.broadcast.emit('newMessage', {
-        from: 'Admin',
-        text: 'New user has joined chat',
-        createdAt: new Date().getTime()
-    });
-
-    socket.on('createMessage',(message)=>{
+    socket.on('createMessage', (message) => {
         console.log('createMessage', message);
-       /*  io.emit('newMessage', {
-            from: message.from,
-            text: message.text,
-            createdAt: new Date().getTime()
-        }); */
-        socket.broadcast.emit('newMessage',{
-            from: message.from,
-            text: message.text,
-            createdAt: new Date().getTime()
-        });
+        io.emit('newMessage', generateMessage(message.from, message.text));
+        // socket.broadcast.emit('newMessage', {
+        //   from: message.from,
+        //   text: message.text,
+        //   createdAt: new Date().getTime()
+        // });
     });
 
-    socket.on('disconnect',()=>{
-        console.log('from server: server disconnected');
+    socket.on('disconnect', () => {
+        console.log('User was disconnected');
     });
 });
 
-
-server.listen(port,()=>{
-    console.log(`Server is running on ${port}`);
+server.listen(port, () => {
+    console.log(`Server is up on ${port}`);
 });
