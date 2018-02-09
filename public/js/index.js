@@ -1,18 +1,28 @@
-var socket=io();
+var socket = io();
 
-socket.on('connect', () => {
-    console.log('from client: connected to browser');
-
-    /* //normally this data would be pulled from a form
-    socket.emit('createMessage', {
-        from: 'jeff',
-        text: 'hi there'
-    }); */
+socket.on('connect', function () {
+  console.log('Connected to server');
 });
 
-socket.on('disconnect', () => { console.log('from client: disconnected to browser'); });
-
-socket.on('newMessage',function(message){
-    console.log('newMessage',message);
+socket.on('disconnect', function () {
+  console.log('Disconnected from server');
 });
 
+socket.on('newMessage', function (message) {
+  console.log('newMessage', message);
+  var li = jQuery('<li></li>');
+  li.text(`${message.from}: ${message.text}`);
+
+  jQuery('#messages').append(li);
+});
+
+jQuery('#message-form').on('submit', function (e) {
+  e.preventDefault();
+
+  socket.emit('createMessage', {
+    from: 'User',
+    text: jQuery('[name=message]').val()
+  }, function () {
+
+  });
+});
